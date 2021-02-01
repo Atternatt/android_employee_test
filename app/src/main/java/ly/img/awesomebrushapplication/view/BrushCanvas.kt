@@ -8,20 +8,100 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import ly.img.awesomebrushapplication.data.model.Draw
+import ly.img.awesomebrushapplication.data.model.DrawingOptions
+import ly.img.awesomebrushapplication.data.model.HistoryPoint
+import ly.img.awesomebrushapplication.data.model.Point
+import java.util.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.properties.Delegates
 
-class BrushCanvas @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attrs, defStyleAttr) {
+class BrushCanvas @JvmOverloads constructor(
+    context: Context?,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+
+
     init {
         setWillNotDraw(false)
     }
 
-    private val brushStrokePaint = Paint().also {
-        it.style = Paint.Style.STROKE
+    /**
+     * the current drawing options for the canvas
+     */
+    private var drawingOptions: DrawingOptions by Delegates.observable(
+        DrawingOptions(
+            color = Color.BLACK,
+            strokeSize = 10F
+        )
+    ) { _, _, new ->
+        brushStrokePaint.color = new.color
+        brushStrokePaint.strokeWidth = new.strokeSize
+        invalidate()
+    }
+
+    /**
+     * stores multiple drawings
+     */
+    private val draws: MutableList<Draw> = mutableListOf()
+
+    /**
+     * The current line being drawn in the canvas
+     */
+    private lateinit var currentDraw: Draw
+
+    private val history: MutableList<HistoryPoint> = mutableListOf(
+        HistoryPoint(
+            Date().time,
+            draws
+        )
+    )
+
+    private var isFirstPoint: Boolean = true
+
+    private var currentSnapshotIndex: Int = 0
+
+    private val brushStrokePaint = Paint().apply {
+        style = Paint.Style.STROKE
+        color = drawingOptions.color
+        strokeWidth = drawingOptions.strokeSize
+        isAntiAlias = true
     }
     private val path = Path()
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return super.onTouchEvent(event)
-        // TODO: Implement touch.
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+
+        // Checks for the event that occurs
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                isFirstPoint = true
+                currentDraw = Draw(
+                    points = mutableListOf(Point(event.x, event.y)),
+                    drawingOptions = drawingOptions
+                )
+                saveSnapshot()
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                isFirstPoint = false
+                currentDraw.points.add(Point(event.x, event.y))
+                saveSnapshot()
+            }
+            MotionEvent.ACTION_UP -> {
+                isFirstPoint = false
+                currentDraw.also { draws.add(it) }
+
+            }
+            else -> return false
+        }
+
+        // Schedules a repaint.
+        // Force a view to draw.
+        postInvalidate()
+        return true
+
     }
 
     fun updatePath() {
@@ -42,69 +122,125 @@ class BrushCanvas @JvmOverloads constructor(context: Context?, attrs: AttributeS
 
         // The algorithm below implements the described behavior from above. You only need to fetch the appropriate
         // points from your custom data structure.
+        val points = currentDraw.points
 
-        // Note: this should also be replaced by your custom data structure that stores points.
-        data class DummyPosType(
-            var x:Float = 0.0f,
-            var y:Float = 0.0f
-        )
-
-        val isFirstPoint: Boolean = TODO()
         if (isFirstPoint) {
-            val point: DummyPosType = TODO("Get the first point of your stroke")
+            val point: Point = points.first()
             path.moveTo(point.x, point.y)
         } else {
-            val point: DummyPosType = TODO("Get the current point to draw a cubic Bezier curve to. In the above scenario this would be P3.")
-            val lastPoint: DummyPosType = TODO("The point that you received prior to `point`. In the above scenario this would be P2.")
-            val nextPoint: DummyPosType = TODO("The next point that you're going to draw (P4 in the above scenario or the last you get from onTouchEvent) or null if this is the last point.")
-            val beforeLastPoint: DummyPosType = TODO("The point you received prior to `lastPoint` or `lastPoint` if you didn't receive a point prior to it. In the above scenario this would be P1.")
+            if(points.size > 2) {
+                val point: Point = points[points.size -2]
 
-            val pointDx: Float
-            val pointDy: Float
-            if (nextPoint == null) {
-                pointDx = (point.x - lastPoint.x) / SMOOTH_VAL
-                pointDy = (point.y - lastPoint.y) / SMOOTH_VAL
-            } else {
-                pointDx = (nextPoint.x - lastPoint.x) / SMOOTH_VAL
-                pointDy = (nextPoint.y - lastPoint.y) / SMOOTH_VAL
+                val lastPoint: Point = points[points.size - 3]
+
+                val nextPoint: Point = points[points.size - 1]
+                val beforeLastPoint: Point = if (points.size > 4) points[points.size -4] else lastPoint
+
+                val pointDx: Float
+                val pointDy: Float
+                if (nextPoint == null) {
+                    pointDx = (point.x - lastPoint.x) / SMOOTH_VAL
+                    pointDy = (point.y - lastPoint.y) / SMOOTH_VAL
+                } else {
+                    pointDx = (nextPoint.x - lastPoint.x) / SMOOTH_VAL
+                    pointDy = (nextPoint.y - lastPoint.y) / SMOOTH_VAL
+                }
+
+                val lastPointDx = (point.x - beforeLastPoint.x) / SMOOTH_VAL
+                val lastPointDy = (point.y - beforeLastPoint.y) / SMOOTH_VAL
+
+                path.cubicTo(
+                    lastPoint.x + lastPointDx,
+                    lastPoint.y + lastPointDy,
+                    point.x - pointDx,
+                    point.y - pointDy,
+                    point.x,
+                    point.y
+                )
             }
 
-            val lastPointDx = (point.x - beforeLastPoint.x) / SMOOTH_VAL
-            val lastPointDy = (point.y - beforeLastPoint.y) / SMOOTH_VAL
-
-            path.cubicTo(
-                lastPoint.x + lastPointDx,
-                lastPoint.y + lastPointDy,
-                point.x - pointDx,
-                point.y - pointDy,
-                point.x,
-                point.y
-            )
         }
     }
 
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
+    //region public API
+    /**
+     * Set the stroke color
+     * @param color the color of the stroke
+     */
+    fun setStrokeColor(color: Int) {
+        drawingOptions = drawingOptions.copy(color = color)
+        saveSnapshot()
+    }
 
-        // TODO: This is only an example code how drawing works in general.
+    /**
+     * Sets the size of the stroke
+     * @param size the size
+     */
+    fun setStrokeSize(size: Float) {
+        drawingOptions = drawingOptions.copy(strokeSize = size)
+        saveSnapshot()
+    }
 
-        val w = width.toFloat()
-        val h = height.toFloat()
+    /**
+     * Move a step back in the history
+     */
+    fun stepBack() {
+        currentSnapshotIndex = max(0, currentSnapshotIndex - 1)
+        invalidate()
+    }
 
-        brushStrokePaint.color = Color.BLACK
-        brushStrokePaint.strokeWidth = 10.0f
-
-        path.reset()
-        path.moveTo(w * 0.1f, h * 0.1f)
-        path.lineTo(w * 0.9f, h * 0.25f)
-        path.lineTo(w * 0.1f, h * 0.5f)
-        path.lineTo(w * 0.9f, h * 0.75f)
-        path.lineTo(w * 0.1f, h * 0.9f)
-
-        // TODO: If there is time left, try to implement a cache and draw only the last line instead of everything.
-        canvas?.drawPath(path, brushStrokePaint)
+    /**
+     * Move a stepo forward i the history
+     */
+    fun stepForward() {
+        currentSnapshotIndex = min(currentSnapshotIndex + 1, history.size - 1)
+        invalidate()
 
     }
+
+    /**Cleans the current canvas.*/
+    fun clean() {
+        path.reset()
+        invalidate()
+    }
+    //endregion
+
+    //region private API
+    /**
+     * Saves the current snapshot of the drawing
+     */
+    private fun saveSnapshot() {
+
+        //clears all the history from the current hustory index if we make a change.
+        if(currentSnapshotIndex != 0) {
+            for (index in currentSnapshotIndex until history.size) {
+                history.removeAt(index)
+            }
+        }
+
+        //add next history item
+        history.add(
+            HistoryPoint(
+                time = Date().time,
+                draws = draws
+            )
+        )
+
+        //move the history to the last point
+        currentSnapshotIndex = history.size -1
+    }
+    //endregion
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        if(this::currentDraw.isInitialized) {
+            updatePath()
+            canvas.drawPath(path, brushStrokePaint)
+        }
+
+    }
+
 
     companion object {
         private const val SMOOTH_VAL = 3

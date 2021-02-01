@@ -1,10 +1,37 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/brandPrimaryBase</item>
+        <item name="colorPrimaryVariant">@color/brandPrimaryDark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/brandSecondary</item>
+        <item name="colorSecondaryVariant">@color/colorAccent</item>
+        <item name="colorOnSecondary">@color/coreTextDark</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnError">@android:color/white</item>
+        <item name="colorOnSurface">@color/coreTextDark</item>
+        <item name="android:textColorPrimary">@color/coreTextDark</item>
+        <item name="colorOnBackground">@color/coreTextDark</item>
+        <item name="colorControlHighlight">@android:color/white</item>
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="sliderStyle">@style/defaultSliderStyle</item>
     </style>
 
+    <style name="defaultSliderStyle" parent="Widget.MaterialComponents.Slider">
+        <item name="labelStyle">@style/labelStyle</item>
+        <item name="thumbRadius">14dp</item>
+        <item name="thumbElevation">1dp</item>
+        <item name="tickColorInactive">@android:color/transparent</item>
+        <item name="tickColorActive">@android:color/transparent</item>
+        <item name="trackColorInactive">@color/track_inactive_color</item>
+    </style>
+
+    <style name="labelStyle" parent="@style/Widget.MaterialComponents.Tooltip">
+        <item name="backgroundTint">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.CornerSize10Percent" parent="">
+        <item name="cornerSize">10%</item>
+    </style>
 </resources>

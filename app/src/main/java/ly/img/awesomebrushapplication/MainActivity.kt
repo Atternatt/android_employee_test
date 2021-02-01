@@ -3,17 +3,29 @@ package ly.img.awesomebrushapplication
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.OutputStream
+import kotlin.coroutines.CoroutineContext
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope {
+
+    override val coroutineContext: CoroutineContext = Dispatchers.Main
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -48,6 +60,29 @@ class MainActivity : AppCompatActivity() {
                 creating your data structures.
          */
 
+        select_image_btn.setOnClickListener { onPressLoadImage() }
+        save_image_btn.setOnClickListener { onPressSave() }
+
+        slider_stroke_width.addOnChangeListener { _, value, _ ->
+            onSizeChanged(value)
+        }
+
+        red.setOnClickListener {
+            onChangeColor(Color.RED)
+            slider_stroke_width.setThumbStrokeColorResource(R.color.red)
+        }
+
+
+        black.setOnClickListener {
+            slider_stroke_width.setThumbStrokeColorResource(R.color.black)
+            onChangeColor(Color.BLACK)
+        }
+
+        back_btn.setOnClickListener {  canvas.stepBack() }
+
+        forward_btn.setOnClickListener { canvas.stepForward() }
+
+        clean_btn.setOnClickListener { canvas.clean() }
 
     }
 
@@ -68,15 +103,19 @@ class MainActivity : AppCompatActivity() {
 
     @MainThread
     private fun onPressSave() {
-        TODO("saveBrushToGallery() on a background thread.")
+        launch {
+            saveBrushToGallery()
+        }
+        Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
     }
 
     private fun onChangeColor(@ColorInt color:Int) {
         // ColorInt (8bit) color is ok, do not waste time here.
+        canvas.setStrokeColor(color)
     }
 
     private fun onSizeChanged(size:Float) {
-
+        canvas.setStrokeSize(size)
     }
 
     @WorkerThread
@@ -108,4 +147,5 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val GALLERY_INTENT_RESULT = 0
     }
+
 }

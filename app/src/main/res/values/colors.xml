@@ -1,6 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="brandPrimaryBase">#FF8360</color>
+    <color name="brandPrimaryLight">#FFE8E2</color>
+    <color name="brandPrimaryDark">#E86C49</color>
+
+    <color name="coreBackground">#FAFAFA</color>
+
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="red">#FF0000</color>
+    <color name="black">#000000</color>
+
+    <!-- Common -->
+
+    <color name="brandSecondary">#765EAA</color>
+    <color name="brandSecondaryLight">#E4E0EF</color>
+    <color name="brandSecondaryDark">#573C93</color>
+
+    <color name="coreTextDark">#3E3E3E</color>
+    <color name="coreTextDarkWithAlpha">#b33e3e3e</color>
+    <color name="coreTextEnabled">#747474</color>
+    <color name="coreTextLight">#EAEAEA</color>
+    <color name="indicatorSelectedColor">#747474</color>
+    <color name="indicatorUnselectedColor">#D8D8D8</color>
+    <color name="track_inactive_color">#EAEAEA</color>
 </resources>
