@@ -6,24 +6,28 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.CalendarContract
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ly.img.awesomebrushapplication.controllers.Saver
+import ly.img.awesomebrushapplication.dependencyInjection.Provider
 import java.io.OutputStream
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main
+
+    private val saver: Saver = Provider.instance.providesSaver()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,10 +82,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             onChangeColor(Color.BLACK)
         }
 
-        back_btn.setOnClickListener {  canvas.stepBack() }
-
-        forward_btn.setOnClickListener { canvas.stepForward() }
-
         clean_btn.setOnClickListener { canvas.clean() }
 
     }
@@ -96,8 +96,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         startActivityForResult(intent, GALLERY_INTENT_RESULT)
     }
 
-    private fun handleGalleryImage(uri:Uri) {
-        // Adjust size of the drawable area, after loading the image.
+    private fun handleGalleryImage(uri: Uri) {
+        val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
+        launch {
+            canvas.loadImage(bitmap)
+        }
 
     }
 
@@ -109,26 +112,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
     }
 
-    private fun onChangeColor(@ColorInt color:Int) {
+    private fun onChangeColor(@ColorInt color: Int) {
         // ColorInt (8bit) color is ok, do not waste time here.
         canvas.setStrokeColor(color)
     }
 
-    private fun onSizeChanged(size:Float) {
+    private fun onSizeChanged(size: Float) {
         canvas.setStrokeSize(size)
     }
 
     @WorkerThread
     private fun saveBrushToGallery() {
-        // Do not worry about memory here.
-        // ... instead just use only test images that fit into the available memory.
-
-        // Because it can take some time to create the brush, it would be nice to indicate progress here, but only if you have time left.
-
-        val bitmap: Bitmap = TODO("Create in size of original image, not in screen size!")
-        val outputStream :OutputStream = TODO("Open a ScopedStorage OutputStream and save it in the user's gallery.")
-        outputStream.use {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, outputStream)
+        val bitmap: Bitmap? = canvas.getCurrentBitmap()
+        if(bitmap != null) {
+            saver.save(bitmap)
         }
     }
 

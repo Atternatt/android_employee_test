@@ -3,7 +3,7 @@ package ly.img.awesomebrushapplication.data.model
 import android.os.Parcel
 import android.os.Parcelable
 
-data class Point(
+internal data class Point(
     val x: Float,
     val y: Float
 ): Parcelable {
