@@ -12,6 +12,14 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.lang.ref.WeakReference
 
+
+/**
+ * Implementation of [Saver] interface that will save a bitmap into Androids Gallery.
+ *
+ * @constructor context - The context of the application in order to find the folders
+ *
+ * In order to prevent memory leaks we created a [WeakReference] over the context.
+ */
 class AndroidGallerySaver(context: Context): Saver {
 
     private val context: WeakReference<Context> by lazy { WeakReference(context) }

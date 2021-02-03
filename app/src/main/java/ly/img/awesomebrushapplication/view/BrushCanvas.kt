@@ -31,11 +31,18 @@ class BrushCanvas @JvmOverloads constructor(
      */
     private var currentDraw: Draw? = null
 
+    /**
+     * The current brush used to draw.
+     */
     private var currentBrush: Brush = SimpleBrush(
         brushColor = Color.BLACK,
         brushSize = 10F
     )
 
+    /**
+     * the drawer object used to draw all the paths
+     * take a look into [Drawer] and it's current implementation [AndroidBezierDrawer]
+     */
     private var drawer: Drawer? = null
 
     /**
@@ -106,6 +113,11 @@ class BrushCanvas @JvmOverloads constructor(
         invalidate()
     }
 
+    /**
+     * Loads a specific bitmap into the canvas in order to draw on top of it
+     * @param bitmap the selected image
+     * @see [ImageLoader] to see the interface's full signature.
+     */
     override suspend fun loadImage(bitmap: Bitmap) {
         val width: Int = bitmap.width
         val height: Int = bitmap.height
@@ -124,6 +136,10 @@ class BrushCanvas @JvmOverloads constructor(
         drawer = AndroidBezierDrawer(imageCanvas!!)
     }
 
+    /**
+     * Gets the current bitmap with all its drawings.
+     * @return [Bitmap] the image with all the drawings.
+     */
     fun getCurrentBitmap(): Bitmap? = bitmap
 
     //endregion

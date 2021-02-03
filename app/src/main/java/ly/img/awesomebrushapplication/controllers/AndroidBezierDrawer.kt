@@ -7,6 +7,11 @@ import ly.img.awesomebrushapplication.data.model.Draw
 import ly.img.awesomebrushapplication.data.model.Point
 import java.lang.ref.WeakReference
 
+/**
+ * This Drawer uses [Canvas], [Path] & [Paint] objects, attached to Androd Framework, in order to draw on top of images.
+ *
+ * - As it needs the canvas from the view to print everything we created a [WeakReference] in order to prevent leaking memory.
+ */
 internal class AndroidBezierDrawer(canvas: Canvas) : Drawer {
 
     companion object {
